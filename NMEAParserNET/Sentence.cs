@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace NMEAParserNET
 {
@@ -12,11 +13,36 @@ namespace NMEAParserNET
     /// </summary>
     public abstract class Sentence
     {
-        //public Sentence(string sentense) 
-        //{
+        public Sentence(string sentense)
+        {
+            if (sentense.Substring(sentense.Length - 2) != "\r\n")
+            {
+                sentense += "\r\n";
+            }
+            if (sentense.Substring(0, 1) != "$")
+            {
+                sentense = "$" + sentense;
+            }
+            this.SentenceString = sentense;
 
-        //}
-        public abstract string Message { get; }
+            if (!checkSentence())
+            {
+                throw new Exception();
+            }
+        }
+        public string Message 
+        {
+            get
+            {
+                string str = getBlockData(0);
+                if (str.Length != 5)
+                {
+                    throw new Exception();
+                }
+                return str.Substring(2,3);
+            }
+        }
+        internal abstract bool checkSentence();
         private string _SentenceString;
         public string SentenceString
         {
@@ -30,14 +56,22 @@ namespace NMEAParserNET
                 {
                     throw new Exception();
                 }
-                if (value.Substring(value.Length - 2) != "\r\n" || value.Substring(0, 1) != "$" || value.Substring(value.Length - 5).Substring(0,2) != "*")
+                if (value.Substring(value.Length - 2) != "\r\n" || value.Substring(0, 1) != "$" || value.Substring(value.Length - 5).Substring(0,1) != "*")
                 {
                     throw new Exception();
                 }
                 _SentenceString = value;
             }
         }
-        private string getDataString() 
+
+        internal string getBlockData(uint n)
+        {
+            var str = getDataString();
+            string[] ary = str.Split(",");
+            return ary[n];
+        }
+
+        internal string getDataString() 
         {
             int end = _SentenceString.IndexOf('*');
             int start = _SentenceString.IndexOf('$');
@@ -50,8 +84,7 @@ namespace NMEAParserNET
         public Byte CheckSum 
         {
             get 
-            {
-                
+            {   
                 throw new Exception();
             } 
         }
