@@ -24,6 +24,7 @@ namespace NMEAParserNET.NMEA
                 return TypeOfMessage.GGA;
             }
         }
+        public GEO2d GEO2d { get { return new GEO2d() { Latitude = this.Latitude, Longitude = this.Longitude }; } }
 
         public override string MessageStr { get { return "GGA"; } }
         public GGATime Time 

@@ -17,7 +17,6 @@ namespace NMEAParserNET
             {
                 string r = sentence.Substring(3, 3);
                 t = NMEA.Sentence.SentenceDictionary[r];
-                //NMEA.Sentence.SentenceDictionary.TryGetValue(sentence.Substring(3,3), out t);
             }
             catch (Exception)
             {
@@ -29,12 +28,12 @@ namespace NMEAParserNET
         {
             NoDollar,HavingDoller,WaitLF
         }
-        public static string PurgeWithinNMEA(string FilePath) 
+        public static string PurgeWithinNMEA(string binFilePath) 
         {
             stateType state = stateType.NoDollar;
             var stringList = new List<string>();
             var charList = new List<byte>();
-            var sr = new StreamReader(FilePath,System.Text.Encoding.ASCII);
+            var sr = new StreamReader(binFilePath,System.Text.Encoding.ASCII);
             int c = sr.Read();
             for (; c != -1; c = sr.Read())
             {
@@ -81,7 +80,6 @@ namespace NMEAParserNET
             }
             if (charList.Count >= 7)
             {
-                //string s = System.Text.Encoding.ASCII.GetString(charList.ToArray());
                 if (charList[6] == (byte)',' && charList[0] == (byte)'$')
                 {
                     stringList.Add(System.Text.Encoding.ASCII.GetString(charList.ToArray()) + "\r\n");
