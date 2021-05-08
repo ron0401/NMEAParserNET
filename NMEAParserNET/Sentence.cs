@@ -13,55 +13,100 @@ namespace NMEAParserNET
     /// </summary>
     public abstract class Sentence
     {
+        public Sentence() { }
         public Sentence(string sentense)
         {
-            if (sentense.Substring(sentense.Length - 2) != "\r\n")
-            {
-                sentense += "\r\n";
-            }
-            if (sentense.Substring(0, 1) != "$")
-            {
-                sentense = "$" + sentense;
-            }
-            this.SentenceString = sentense;
-
-            if (!checkSentence())
-            {
-                throw new Exception();
-            }
+            sentense = AddHeadTail(sentense);
+            this._SentenceString = sentense;
         }
-        public string Message 
+
+        internal static string AddHeadTail(string str) 
         {
-            get
+            if (str.Substring(str.Length - 2) != "\r\n")
             {
-                string str = getBlockData(0);
-                if (str.Length != 5)
+                str += "\r\n";
+            }
+            if (str.Substring(0, 1) != "$")
+            {
+                str = "$" + str;
+            }
+            return str;
+        }
+
+        public enum TypeOfMessage 
+        {
+            GGA
+        }
+        internal static Dictionary<string, TypeOfMessage> SentenceDictionary = new Dictionary<string, TypeOfMessage>()
+        {
+            {"GGA",TypeOfMessage.GGA }
+        };
+        public static TypeOfMessage JudgeMsgType(string sentence) 
+        {
+            TypeOfMessage t;
+            sentence = AddHeadTail(sentence);
+            SentenceDictionary.TryGetValue(sentence, out t);
+            return t;
+        }
+        internal void UpdateSentenceBlock(int index,string str) 
+        {
+            string[] sen = _SentenceString.Split("*");
+
+            var ary = sen[0].Split(",");
+            ary[index] = str;
+            sen[0] = string.Join(",", ary);
+            _SentenceString = string.Join("*", sen);
+        }
+
+        internal string GetBlankCsvString(int num)
+        {
+            string[] str = new string[num];
+            for (int i = 0; i < str.Length; i++)
+            {
+                str[i] = "";
+            }
+            return string.Join(",", str);
+        }
+
+        public string Talker 
+        {
+            get 
+            {
+                return getBlockData(0).Replace("$", "").Substring(0, 2);
+            }
+            set
+            {
+                if (value.Length != 2)
                 {
                     throw new Exception();
                 }
-                return str.Substring(2,3);
+                UpdateSentenceBlock(0, "$" + value + this.MessageStr);
+                UpdateCheckSum();
             }
         }
-        internal abstract bool checkSentence();
-        private string _SentenceString;
+
+        public abstract TypeOfMessage Message { get; }
+        public abstract string MessageStr { get; }
+
+        internal string _SentenceString;
         public string SentenceString
         {
             get
             {
                 return _SentenceString;
             }
-            set
-            {
-                if (value.Length < 6)
-                {
-                    throw new Exception();
-                }
-                if (value.Substring(value.Length - 2) != "\r\n" || value.Substring(0, 1) != "$" || value.Substring(value.Length - 5).Substring(0,1) != "*")
-                {
-                    throw new Exception();
-                }
-                _SentenceString = value;
-            }
+            //set
+            //{
+            //    if (value.Length < 6)
+            //    {
+            //        throw new Exception();
+            //    }
+            //    if (value.Substring(value.Length - 2) != "\r\n" || value.Substring(0, 1) != "$" || value.Substring(value.Length - 5).Substring(0,1) != "*")
+            //    {
+            //        throw new Exception();
+            //    }
+            //    _SentenceString = value;
+            //}
         }
 
         internal string getBlockData(uint n)
@@ -81,22 +126,48 @@ namespace NMEAParserNET
         {
             throw new Exception();
         }
-        public Byte CheckSum 
+        public class CheckSum 
+        {
+            public Byte Value { get; set; }
+            public static byte CalcCheckSum(string sentence) 
+            {
+                string str = sentence.Split("*")[0].Replace("$","");
+                byte[] data = Encoding.ASCII.GetBytes(str);
+                byte b = 0;
+                foreach (var f in data)
+                {
+                    b =(byte)(((int)b) ^ f);
+                }
+                return b;
+            }
+        }
+        internal void UpdateCheckSum() 
+        {
+            string sum = BitConverter.ToString(new byte[] { CheckSum.CalcCheckSum(this._SentenceString) });
+            string str = this._SentenceString.Split("*")[0];
+            str = str + "*" + sum + "\r\n";
+            _SentenceString = str;
+        }
+        public CheckSum _CheckSum 
         {
             get 
-            {   
-                throw new Exception();
+            {
+                try
+                {
+                    string str = _SentenceString.Split("*")[1];
+                    str = str.Replace("\r\n", "");
+                    if (str == "")
+                    {
+                        return null;
+                    }
+                    return new CheckSum() { Value = Convert.ToByte(str.Substring(0, 2), 16) };
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+
             } 
         }
-
-        //public static byte getNEMAcheckSum(String data, int startPos, int endPos)
-        //{
-        //    byte checkSum = 0;
-        //    for (int i = startPos; i < endPos; i++)
-        //    {
-        //        checkSum ^= (byte)data.charAt(i);
-        //    }
-        //    return checkSum;
-        //}
     }
 }
