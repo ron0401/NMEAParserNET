@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-namespace NMEAParserNET
+namespace NMEAParserNET.NMEA
 {
 
     /// <summary>
@@ -35,19 +35,13 @@ namespace NMEAParserNET
 
         public enum TypeOfMessage 
         {
-            GGA
+            GGA,Unknown
         }
         internal static Dictionary<string, TypeOfMessage> SentenceDictionary = new Dictionary<string, TypeOfMessage>()
         {
             {"GGA",TypeOfMessage.GGA }
         };
-        public static TypeOfMessage JudgeMsgType(string sentence) 
-        {
-            TypeOfMessage t;
-            sentence = AddHeadTail(sentence);
-            SentenceDictionary.TryGetValue(sentence, out t);
-            return t;
-        }
+
         internal void UpdateSentenceBlock(int index,string str) 
         {
             string[] sen = _SentenceString.Split("*");

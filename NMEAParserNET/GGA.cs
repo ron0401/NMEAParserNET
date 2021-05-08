@@ -1,7 +1,7 @@
 ﻿using System;
 using CoordinateNET;
 
-namespace NMEAParserNET
+namespace NMEAParserNET.NMEA
 {
     public class GGA : Sentence
     {
