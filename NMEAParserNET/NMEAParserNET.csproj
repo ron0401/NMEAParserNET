@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.1</Version>
+    <Authors>ron0401</Authors>
+    <Company />
+    <Description />
+    <PackageProjectUrl>https://github.com/ron0401/NMEAParserNET</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
